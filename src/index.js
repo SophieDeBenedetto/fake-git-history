@@ -42,10 +42,7 @@ module.exports = function(props) {
     const spinner = ora("Generating your GitHub activity\n").start();
 
     const command = commitDateList
-      .map(date => {
-        if (firstCommit) {
-          firstCommit = false;
-          return addLines();
+     addLines();
         } else {
           return randomCommitActivity()();
         }
@@ -120,16 +117,24 @@ function randomLOCNum() {
 }
 
 function addLines(date, filename) {
+  console.log("ADDING")
   let lines = randomLOCNum()
-  `for i in {1..${lines}}; do echo "${date}" > ${filename}; git add .; git commit --date "${date}" -m "fake commit`
+  `for i in {1..${lines}}; do echo "HI" >> ${filename}; done; git add .; git commit --date "${date}" -m "fake commit`
 }
 
 function removeLines(date, filename) {
+  console.log("REMOVING")
   let lines = randomLOCNum()
-  `for i in {1..${lines}}; do sed -i "1d" ${filename}; git add .; git commit --date "${date}" -m "fake commit`
+  `for i in {1..${lines}}; do sed -i "1d" ${filename}; done; git add .; git commit --date "${date}" -m "fake commit`
+}
+
+function modifyLines(date, filename) {
+  let lines = randomLOCNum()
+  console.log("MODIFYING")
+  `for i in {1..${lines}}; do sed -i "${i}s/.*/modified-line/" ${filename}; done; git add .; git commit --date "${date}" -m "fake commit`
 }
 
 function randomCommitActivity() {
-  let commitActions = [addLines, removeLines]
+  let commitActions = [addLines, removeLines, modifyLines]
   return commitActions[Math.floor(Math.random() * commitActions.length)];
 }
