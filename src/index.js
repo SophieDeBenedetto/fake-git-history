@@ -1,6 +1,7 @@
 const util = require("util");
 const os = require("os");
 const { exec } = require("child_process");
+const fs = require("fs");
 const execAsync = util.promisify(exec);
 const {
   parse,
@@ -121,17 +122,47 @@ function randomLOCNum() {
 
 function addLines(date, filename) {
   const lines = randomLOCNum();
-  return `for i in {1..${lines}}; do echo "${date}" >> ${filename}; done; git add .; git commit --date "${date}" -m "fake commit"`;
+  console.log(`Adding ${lines} lines...`);
+  return `for i in {1..${lines}}; do echo "${date}" >> ${filename}; done; git add .; git commit --date "${date}" -m "added ${lines} lines"`;
 }
 
 function removeLines(date, filename) {
-  const lines = randomLOCNum();
-  return `for i in {1..${lines}}; do sed -i "1d" ${filename}; done; git add .; git commit --date "${date}" -m "fake commit"`;
+  // can't use sed here bc it doesn't play nicely with nodejs exec
+  let loc = randomLOCNum();
+  console.log(`Removing ${loc} lines...`);
+  var data = fs
+    .readFileSync(filename)
+    .toString()
+    .split("\n");
+  for (line = 0; line < loc; line++) {
+    data.splice(line, 1);
+  }
+  var text = data.join("\n");
+  fs.writeFile(filename, text, function(err) {
+    if (err) return console.log(err);
+  });
+  return `echo "finished removing lines" >> ${filename}; git add .; git commit --date "${date}" -m "removed ${loc} lines"`;
 }
 
 function modifyLines(date, filename) {
-  const lines = randomLOCNum();
-  return `for i in {1..${lines}}; do sed -i "$i\s/.*/modified-line/" ${filename}; done; git add .; git commit --date "${date}" -m "fake commit"`;
+  // can't use sed here bc it doesn't play nicely with nodejs exec
+  let loc = randomLOCNum();
+  console.log(`Adding ${loc} lines...`);
+  var data = fs
+    .readFileSync(filename)
+    .toString()
+    .split("\n");
+  for (line = 0; line < loc; line++) {
+    data[line] = "modified-line";
+  }
+  console.log(data);
+  var text = data.join("\n");
+  fs.writeFile(filename, text, function(err) {
+    if (err) {
+      console.log(err);
+    }
+  });
+  return `echo "finished modifying lines" >> ${filename}; git add .; git commit --date "${date}" -m "modified ${loc} lines"`;
 }
 
 function randomCommitActivity() {
