@@ -42,9 +42,12 @@ module.exports = function(props) {
     const spinner = ora("Generating your GitHub activity\n").start();
 
     const command = commitDateList
-     addLines();
+      .map(date => {
+        if (firstCommit) {
+          firstCommit = false;
+          return addLines(date, filename);
         } else {
-          return randomCommitActivity()();
+          return randomCommitActivity()(date, filename);
         }
       })
       .join(";");
