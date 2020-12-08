@@ -4,4 +4,4 @@ coverage
 .DS_Store
 foo.txt
 test.txt
-my-history/*
+./my-history/*

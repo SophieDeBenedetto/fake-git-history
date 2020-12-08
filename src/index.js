@@ -155,7 +155,6 @@ function modifyLines(date, filename) {
   for (line = 0; line < loc; line++) {
     data[line] = "modified-line";
   }
-  console.log(data);
   var text = data.join("\n");
   fs.writeFile(filename, text, function(err) {
     if (err) {
