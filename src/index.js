@@ -14,6 +14,8 @@ const chalk = require("chalk");
 const ora = require("ora");
 const boxen = require("boxen");
 
+let firstCommit = true;
+
 async function sleep(millis) {
   return new Promise(resolve => setTimeout(resolve, millis));
 }
@@ -39,21 +41,17 @@ module.exports = function(props) {
   (async function generateHistory() {
     const spinner = ora("Generating your GitHub activity\n").start();
 
-    if (os.platform() === "win32") {
-      for (const date of commitDateList) {
-        await execShellCommand(`echo "${date}" > ${filename}`);
-        await execShellCommand(`git add .`);
-        await execShellCommand(`git commit --quiet --date "${date}" -m "fake commit"`);
-      }
-    } else {
-      const command = commitDateList
-        .map(date => {
-          return `echo "${date}" > ${filename}; git add .; git commit --date "${date}" -m "fake commit"`;
-        })
-        .join(";");
-      await execAsync(command);
-    }
-
+    const command = commitDateList
+      .map(date => {
+        if (firstCommit) {
+          firstCommit = false;
+          return addLines();
+        } else {
+          return randomCommitActivity()();
+        }
+      })
+      .join(";");
+    await execAsync(command);
     spinner.succeed();
 
     console.log(
@@ -61,7 +59,7 @@ module.exports = function(props) {
         `${chalk.green("Success")} ${
           commitDateList.length
         } commits have been created.
-      If you rely on this tool, please consider buying me a cup of coffee. I would appreciate it 
+      If you rely on this tool, please consider buying me a cup of coffee. I would appreciate it
       ${chalk.blueBright("https://www.buymeacoffee.com/artiebits")}`,
         { borderColor: "yellow", padding: 1, align: "center" }
       )
@@ -84,7 +82,7 @@ module.exports = function(props) {
     });
     });
   }
-  
+
   function generateCommitDateList({
     commitsPerDay,
     workdaysOnly,
@@ -116,3 +114,22 @@ module.exports = function(props) {
     return commitDateList;
   }
 };
+
+function randomLOCNum() {
+  return Math.floor(Math.random() * Math.floor(100));
+}
+
+function addLines(date, filename) {
+  let lines = randomLOCNum()
+  `for i in {1..${lines}}; do echo "${date}" > ${filename}; git add .; git commit --date "${date}" -m "fake commit`
+}
+
+function removeLines(date, filename) {
+  let lines = randomLOCNum()
+  `for i in {1..${lines}}; do sed -i "1d" ${filename}; git add .; git commit --date "${date}" -m "fake commit`
+}
+
+function randomCommitActivity() {
+  let commitActions = [addLines, removeLines]
+  return commitActions[Math.floor(Math.random() * commitActions.length)];
+}
